@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tokenization</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d0d1a;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:monospace;}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;}
+#panel{position:fixed;top:16px;right:16px;background:rgba(10,10,20,0.95);border:1px solid #DA7756;border-radius:6px;padding:12px 14px;color:#f0e8d8;font-size:11px;min-width:215px;z-index:99;}
+#panel h3{color:#DA7756;margin-bottom:10px;font-size:11px;letter-spacing:2px;display:flex;justify-content:space-between;align-items:center;}
+#toggleBtn{color:#888;font-size:10px;cursor:pointer;border:1px solid #555;padding:1px 6px;border-radius:3px;font-family:monospace;}
+#toggleBtn:hover{color:#DA7756;border-color:#DA7756;}
+#panel.hidden .pbody{display:none;}
+.row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;gap:8px;}
+.row label{color:#999;white-space:nowrap;flex-shrink:0;font-size:10px;}
+.row input[type=range]{flex:1;accent-color:#DA7756;cursor:pointer;}
+.val{color:#DA7756;min-width:38px;text-align:right;font-size:10px;}
+.row input[type=checkbox]{accent-color:#DA7756;cursor:pointer;}
+.sep{border-top:1px solid #2a2a3a;margin:8px 0;}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="panel">
+  <h3>CONTROLS <span id="toggleBtn">H</span></h3>
+  <div class="pbody">
+    <div class="row"><label>文字速度</label><input type="range" id="sl_txtSpeed" min="0.2" max="4" step="0.05" value="0.8"><span class="val" id="vl_txtSpeed">0.8</span></div>
+    <div class="row"><label>文字大小</label><input type="range" id="sl_txtSize" min="6" max="20" step="1" value="20"><span class="val" id="vl_txtSize">20</span></div>
+    <div class="row"><label>文字颜色</label><input type="color" id="sl_txtColor" value="#f0e8d8"><span class="val" id="vl_txtColor" style="font-size:9px">#f0e8d8</span></div>
+    <div class="row"><label>字符间距</label><input type="range" id="sl_charGap" min="0.02" max="0.12" step="0.005" value="0.055"><span class="val" id="vl_charGap">0.055</span></div>
+    <div class="row"><label>钳子咬速</label><input type="range" id="sl_clawSpeed" min="0.03" max="0.3" step="0.01" value="0.10"><span class="val" id="vl_clawSpeed">0.10</span></div>
+    <div class="row"><label>Token飞速X</label><input type="range" id="sl_tokVx" min="0.3" max="5" step="0.1" value="1.8"><span class="val" id="vl_tokVx">1.8</span></div>
+    <div class="row"><label>Token飞速Y</label><input type="range" id="sl_tokVy" min="0.3" max="4" step="0.1" value="1.5"><span class="val" id="vl_tokVy">1.5</span></div>
+    <div class="row"><label>举臂触发距</label><input type="range" id="sl_raiseDist" min="0.02" max="0.4" step="0.01" value="0.10"><span class="val" id="vl_raiseDist">0.10</span></div>
+    <div class="sep"></div>
+    <div class="row"><label>方块跳动幅度</label><input type="range" id="sl_bounce" min="0.1" max="3" step="0.05" value="0.8"><span class="val" id="vl_bounce">0.8</span></div>
+    <div class="row"><label>方块跳动频率</label><input type="range" id="sl_bounceFreq" min="0.01" max="0.15" step="0.005" value="0.04"><span class="val" id="vl_bounceFreq">0.04</span></div>
+    <div class="row"><label>方块字号</label><input type="range" id="sl_tokFontSize" min="4" max="16" step="1" value="16"><span class="val" id="vl_tokFontSize">16</span></div>
+    <div class="row"><label>方块大小</label><input type="range" id="sl_tokBoxSize" min="6" max="30" step="1" value="8"><span class="val" id="vl_tokBoxSize">8</span></div>
+    <div class="row"><label>标题字号</label><input type="range" id="sl_titleSize" min="8" max="22" step="1" value="13"><span class="val" id="vl_titleSize">13</span></div>
+    <div class="row"><label>副标题字号</label><input type="range" id="sl_subtitleSize" min="5" max="14" step="1" value="7"><span class="val" id="vl_subtitleSize">7</span></div>
+    <div class="sep"></div>
+    <div class="row"><label>星星闪烁</label><input type="checkbox" id="chk_star" checked></div>
+    <div class="row"><label>切割火花</label><input type="checkbox" id="chk_spark" checked></div>
+  </div>
+</div>
+<script>
+const S=4,GW=150,GH=200;
+const cv=document.getElementById('cv');
+cv.width=GW*S; cv.height=GH*S;
+cv.style.width='600px'; cv.style.height='800px';
+const ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+
+const P={
+  txtSpeed:0.8, txtSize:10, txtColor:'#f0e8d8', charGap:0.055,
+  clawSpeed:0.10, tokVx:1.8, tokVy:1.5, raiseDist:0.18,
+  bounce:0.8, bounceFreq:0.04, tokFontSize:8, tokBoxSize:10, titleSize:13, subtitleSize:7,
+  star:true, spark:true
+};
+
+function bR(sid,vid,key,isFloat){
+  var sl=document.getElementById(sid),vl=document.getElementById(vid);
+  sl.addEventListener('input',function(){
+    P[key]=isFloat?parseFloat(sl.value):parseInt(sl.value);
+    vl.textContent=sl.value;
+  });
+}
+bR('sl_txtSpeed','vl_txtSpeed','txtSpeed',true);
+bR('sl_txtSize','vl_txtSize','txtSize',false);
+bR('sl_charGap','vl_charGap','charGap',true);
+bR('sl_clawSpeed','vl_clawSpeed','clawSpeed',true);
+bR('sl_tokVx','vl_tokVx','tokVx',true);
+bR('sl_tokVy','vl_tokVy','tokVy',true);
+bR('sl_raiseDist','vl_raiseDist','raiseDist',true);
+bR('sl_bounce','vl_bounce','bounce',true);
+bR('sl_bounceFreq','vl_bounceFreq','bounceFreq',true);
+bR('sl_tokFontSize','vl_tokFontSize','tokFontSize',false);
+bR('sl_tokBoxSize','vl_tokBoxSize','tokBoxSize',false);
+bR('sl_titleSize','vl_titleSize','titleSize',false);
+
+bR('sl_subtitleSize','vl_subtitleSize','subtitleSize',false);
+document.getElementById('sl_txtColor').addEventListener('input',function(e){
+  P.txtColor=e.target.value;
+  document.getElementById('vl_txtColor').textContent=e.target.value;
+});
+document.getElementById('chk_star').addEventListener('change',function(e){P.star=e.target.checked;});
+document.getElementById('chk_spark').addEventListener('change',function(e){P.spark=e.target.checked;});
+document.getElementById('toggleBtn').addEventListener('click',function(){
+  document.getElementById('panel').classList.toggle('hidden');
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='h'||e.key==='H') document.getElementById('panel').classList.toggle('hidden');
+});
+
+// palette
+const O1='#DA7756',O2='#b85a38',O3='#e89a70',BK='#0a0806',WH='#f0e8d8';
+const H1='#e8b84b',H2='#c99030',H3='#f5d070';
+const TOKC=['#DA7756','#5BC4BF','#F4A7B9','#F5C842','#7BC67E','#A78BFA','#60a5fa'];
+
+function px(x,y,c,w,h){
+  w=w||1;h=h||1;
+  ctx.fillStyle=c;
+  ctx.fillRect(Math.round(x)*S,Math.round(y)*S,Math.round(w)*S,Math.round(h)*S);
+}
+
+// layout
+const CX=75, CY=115, BW=20, BH=16;
+const BX=CX-BW/2, BY=CY-BH/2;
+const FLOOR=GH-6;
+const TOTAL_SENTS=2;
+
+// bezier — endpoint = raised left claw mouth
+const CLAW_TIP_X=BX+3, CLAW_TIP_Y=BY-22;
+const BP={p0:{x:-8,y:5},p1:{x:10,y:5},p2:{x:35,y:CLAW_TIP_Y-10},p3:{x:CLAW_TIP_X,y:CLAW_TIP_Y}};
+function bezPt(t){
+  t=Math.max(0,Math.min(1,t));
+  var m=1-t,p=BP;
+  return{
+    x:m*m*m*p.p0.x+3*m*m*t*p.p1.x+3*m*t*t*p.p2.x+t*t*t*p.p3.x,
+    y:m*m*m*p.p0.y+3*m*m*t*p.p1.y+3*m*t*t*p.p2.y+t*t*t*p.p3.y
+  };
+}
+
+// draw char
+function drawBody(blink,squishX,squishY,starEye){
+  // squish transform for spin
+  var sx=squishX||1, sy=squishY||1;
+  var bx2=BX+(BW*(1-sx)/2), bw2=Math.round(BW*sx);
+  var by2=BY+(BH*(1-sy)/2), bh2=Math.round(BH*sy);
+  if(sx!==1||sy!==1){
+    // draw squished body
+    px(bx2,by2+bh2,O2,bw2,2);
+    px(bx2,by2,O1,bw2,bh2);
+    px(bx2+1,by2,O3,bw2-2,2);
+    return;
+  }
+  px(BX+1,BY+BH,O2,BW-2,2); px(BX+BW,BY+1,O2,1,BH-1);
+  px(BX,BY,O1,BW,BH);
+  px(BX+1,BY,O3,BW-2,2); px(BX,BY+1,O3,1,1); px(BX+BW-1,BY+1,O3,1,1);
+  var eh=blink?3:1, ey=BY+5;
+  if(starEye){
+    // star eyes: X shape
+    px(BX+4,ey,BK,1,1); px(BX+6,ey,BK,1,1); px(BX+5,ey+1,BK,1,1); px(BX+4,ey+2,BK,1,1); px(BX+6,ey+2,BK,1,1);
+    px(BX+BW-8,ey,BK,1,1); px(BX+BW-6,ey,BK,1,1); px(BX+BW-7,ey+1,BK,1,1); px(BX+BW-8,ey+2,BK,1,1); px(BX+BW-6,ey+2,BK,1,1);
+  } else {
+    px(BX+4,ey,BK,4,eh); px(BX+4,ey-1,O2,4,1); if(blink)px(BX+4,ey,O3,1,1);
+    px(BX+BW-8,ey,BK,4,eh); px(BX+BW-8,ey-1,O2,4,1); if(blink)px(BX+BW-8,ey,O3,1,1);
+  }
+  px(BX+3,BY+BH,O1,4,5); px(BX+3,BY+BH+5,O2,4,1); px(BX+6,BY+BH,O2,1,4);
+  px(BX+BW-7,BY+BH,O1,4,5); px(BX+BW-7,BY+BH+5,O2,4,1); px(BX+BW-4,BY+BH,O2,1,4);
+}
+function drawHat(){
+  var HY=BY,HX=BX-2,HW=BW+4;
+  px(HX,HY-2,H1,HW,2); px(HX+1,HY-1,H2,HW-2,1);
+  px(HX+2,HY-6,H1,HW-4,4); px(HX+4,HY-9,H1,HW-8,4); px(HX+6,HY-11,H1,HW-12,3);
+  px(HX+7,HY-11,H3,HW-16,1); px(HX+4,HY-9,H3,3,1); px(HX+HW-7,HY-9,H3,3,1);
+  px(HX+2,HY-3,H2,HW-4,1);
+  px(CX-1,HY-8,H2,3,1); px(CX-1,HY-7,H2,3,1); px(CX-1,HY-6,H2,3,1); px(CX,HY-9,H2,1,5);
+}
+function drawArms(armRaise,clawOpen){
+  var t=armRaise, gap=Math.round(clawOpen*5);
+  var LAX=BX-4+t*(BX+1-(BX-4)), LAY=BY+9+t*(BY-18-(BY+9));
+  px(LAX,LAY,O1,4,4); px(LAX,LAY+4,O2,4,1);
+  if(t<0.5){
+    var cx=LAX-6,cy=LAY;
+    px(cx,cy-3,O1,6,3); px(cx-1,cy-3,O2,1,3); px(cx,cy-4,O2,6,1);
+    px(cx,cy+gap,O1,6,3); px(cx-1,cy+gap,O2,1,3); px(cx,cy+gap+3,O2,6,1);
+    if(gap>0)px(cx,cy,BK,6,gap); px(LAX-3,cy,O1,3,2);
+  } else {
+    var cx=LAX,cy=LAY-4;
+    px(cx,cy-gap,O1,4,4); px(cx,cy-gap-1,O2,4,1); px(cx-1,cy-gap,O2,1,4); px(cx+4,cy-gap,O2,1,4);
+    px(cx,cy+3,O1,4,4); px(cx,cy+7,O2,4,1); px(cx-1,cy+3,O2,1,4); px(cx+4,cy+3,O2,1,4);
+    if(gap>0)px(cx,cy,BK,4,gap+3);
+    px(LAX,LAY-1,O1,4,2);
+  }
+  var RAX=BX+BW+t*(BX+BW-7-(BX+BW)), RAY=BY+9+t*(BY-18-(BY+9));
+  px(RAX,RAY,O1,4,4); px(RAX,RAY+4,O2,4,1);
+  if(t<0.5){
+    var cx=RAX+4,cy=RAY;
+    px(cx,cy-3,O1,6,3); px(cx+6,cy-3,O2,1,3); px(cx,cy-4,O2,6,1);
+    px(cx,cy+gap,O1,6,3); px(cx+6,cy+gap,O2,1,3); px(cx,cy+gap+3,O2,6,1);
+    if(gap>0)px(cx,cy,BK,6,gap); px(RAX+1,cy,O1,3,2);
+  } else {
+    var cx=RAX-1,cy=RAY-4;
+    px(cx,cy-gap,O1,4,4); px(cx,cy-gap-1,O2,4,1); px(cx-1,cy-gap,O2,1,4); px(cx+4,cy-gap,O2,1,4);
+    px(cx,cy+3,O1,4,4); px(cx,cy+7,O2,4,1); px(cx-1,cy+3,O2,1,4); px(cx+4,cy+3,O2,1,4);
+    if(gap>0)px(cx,cy,BK,4,gap+3);
+    px(RAX-1,RAY-1,O1,4,2);
+  }
+}
+function drawChar(blink,armRaise,clawOpen,opts){
+  opts=opts||{};
+  var sqX=opts.squishX||1, sqY=opts.squishY||1;
+  var noHat=opts.noHat||false, noClaws=opts.noClaws||false;
+  var starEye=opts.starEyes||false;
+  if(armRaise<0.5){
+    if(!noClaws)drawArms(armRaise,clawOpen);
+    drawBody(blink,sqX,sqY,starEye);
+  } else {
+    drawBody(blink,sqX,sqY,starEye);
+    if(!noClaws)drawArms(armRaise,clawOpen);
+  }
+  if(!noHat)drawHat();
+}
+
+function pxBox(x,y,w,h,fill){
+  x=Math.round(x);y=Math.round(y);
+  ctx.fillStyle=BK; ctx.fillRect(x*S,y*S,w*S,h*S);
+  ctx.fillStyle=fill; ctx.fillRect((x+1)*S,(y+1)*S,(w-2)*S,(h-2)*S);
+  ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.fillRect((x+1)*S,y*S,(w-2)*S,S);
+}
+
+// stars
+var stars=[];
+for(var i=0;i<55;i++) stars.push({
+  gx:Math.floor(Math.random()*GW),gy:Math.floor(Math.random()*GH),
+  t:Math.random()*6.28,c:['#fff','#aaf','#fda'][Math.floor(Math.random()*3)]
+});
+
+var SENTENCES=[
+  {
+    display:['语','言','是','人','类','智','能','沉','淀','下','来','的','化','石'],
+    cut:    [['语'],['言'],['是'],['人'],['类'],['智'],['能'],['沉'],['淀'],['下'],['来'],['的'],['化'],['石']]
+  },
+  {
+    display:['tokenization','is','where','meaning','begins'],
+    cut:    [['tok','en','iz','ation'],['is'],['where'],['mean','ing'],['be','gins']]
+  },
+];
+var colorOff=0;
+function tokCol(i){return TOKC[(colorOff+i)%TOKC.length];}
+function rnd(a,b){return Math.random()*(b-a)+a;}
+
+// state
+var frame=0, sentIdx=0, totalDone=0;
+var phase='PAUSE', phaseF=0;
+var chars=[];
+var cutIdx=0;        // which display char is being cut
+var subCutIdx=0;     // which subtoken within current char
+var flyingToks=[];   // in flight
+var settledToks=[];  // on floor, bouncing
+var flashPts=[];
+var armRaise=0, clawOpen=0, clawPhase=0, raised=false;
+var allDone=false;
+// celebrate state
+var celebT=0;        // 0..1 progress through celebration
+var hatX=0,hatY=0,hatVx=0,hatVy=0,hatVisible=false;
+var clawsThrown=false,clawLX=0,clawLY=0,clawRX=0,clawRY=0,clawLVx=0,clawLVy=0,clawRVx=0,clawRVy=0;
+var spinT=0;         // 0..1 spin progress
+var starEyes=false;
+
+function startSentence(){
+  var sent=SENTENCES[sentIdx%SENTENCES.length];
+  var disp=sent.display;
+  chars=disp.map(function(t,i){return{txt:t,ci:colorOff+i,t:-i*P.charGap,dispIdx:i};});
+  cutIdx=0; subCutIdx=0; flyingToks=[];
+  armRaise=0; clawOpen=0; clawPhase=0; raised=false; allDone=false;
+  phase='ENTERING'; phaseF=0;
+}
+
+function update(){
+  frame++;
+
+
+  // advance snake
+  function advSnake(dt){chars.forEach(function(c){c.t+=dt;});}
+
+  if(phase==='ENTERING'){
+    advSnake(P.txtSpeed*0.003);
+    if(!raised && chars[0].t >= 1-P.raiseDist){raised=true;phase='RAISING';phaseF=0;}
+    if(chars[0].t>=1){phase='CUTTING';phaseF=0;clawPhase=Math.PI*0.5;} // start claw open
+  }
+  else if(phase==='RAISING'){
+    advSnake(P.txtSpeed*0.001);
+    phaseF++;
+    armRaise=Math.min(1,phaseF/18);
+    clawOpen=0;
+    if(chars[0].t>=1){phase='CUTTING';phaseF=0;clawPhase=Math.PI*0.5;}
+  }
+  else if(phase==='CUTTING'){
+    // snake keeps crawling so each char reaches the claw in turn
+    advSnake(P.txtSpeed*0.001);
+    clawPhase+=P.clawSpeed;
+    clawOpen=0.5+0.5*Math.sin(clawPhase);
+    var prevOpen=0.5+0.5*Math.sin(clawPhase-P.clawSpeed);
+
+    if(cutIdx<chars.length){
+      var c=chars[cutIdx];
+      // wait until THIS char has reached the claw (t >= 1)
+      var charAtClaw=(c.t>=1.0);
+      // fire cut when claw snaps shut AND char is at claw
+      if(charAtClaw && prevOpen>0.15 && clawOpen<=0.15){
+        var pt=bezPt(1); // always cut at claw tip
+        var sent=SENTENCES[sentIdx%SENTENCES.length];
+        var subToks=sent.cut[c.dispIdx];
+        var stxt=subToks[subCutIdx];
+        var bw=P.tokBoxSize, bh=P.tokBoxSize;
+        flyingToks.push({
+          txt:stxt, col:tokCol(c.ci+subCutIdx),
+          x:pt.x, y:pt.y,
+          vx:rnd(0.5,P.tokVx), vy:-P.tokVy*rnd(0.7,1.2),
+          bw:bw, bh:bh, settled:false
+        });
+        if(P.spark) for(var j=0;j<6;j++) flashPts.push({
+          x:pt.x,y:pt.y,vx:rnd(-2,2),vy:rnd(-2.5,0.5),life:14,col:tokCol(c.ci+subCutIdx)
+        });
+        subCutIdx++;
+        if(subCutIdx>=subToks.length){ cutIdx++; subCutIdx=0; }
+      }
+    }
+    if(cutIdx>=chars.length) phase='COOLDOWN',phaseF=0;
+  }
+  else if(phase==='COOLDOWN'){
+    phaseF++;
+    clawOpen=Math.max(0,clawOpen-0.06);
+    if(flyingToks.length===0&&phaseF>30){
+      totalDone++;
+      if(totalDone>=TOTAL_SENTS){
+        phase='CELEBRATE'; phaseF=0; celebT=0;
+        // init hat projectile
+        hatX=CX; hatY=BY; hatVx=rnd(-1.5,1.5); hatVy=-3.5;
+        hatVisible=true; clawsThrown=false; spinT=0; starEyes=false;
+      } else {
+        phase='PAUSE'; phaseF=0;
+      }
+    }
+  }
+  else if(phase==='CELEBRATE'){
+    phaseF++;
+    celebT=phaseF/90; // 90 frames total
+
+    // 0-0.2: hat flies off
+    if(celebT>=0.05) hatVisible=true;
+    if(hatVisible){
+      hatVy+=0.18; hatX+=hatVx; hatY+=hatVy;
+    }
+
+    // 0.2-0.5: throw claws
+    if(celebT>=0.2 && !clawsThrown){
+      clawsThrown=true;
+      clawLX=BX-8; clawLY=BY+5; clawLVx=-3; clawLVy=-2;
+      clawRX=BX+BW+8; clawRY=BY+5; clawRVx=3; clawRVy=-2;
+    }
+    if(clawsThrown){
+      clawLVy+=0.1; clawLX+=clawLVx; clawLY+=clawLVy;
+      clawRVy+=0.1; clawRX+=clawRVx; clawRY+=clawRVy;
+    }
+
+    // 0.3-0.8: spin (pixel squish)
+    if(celebT>=0.3){
+      spinT=(celebT-0.3)/0.5;
+      starEyes=true;
+    }
+
+    // end
+    if(phaseF>90){
+      phase='CLEARALL'; phaseF=0;
+      hatVisible=false; clawsThrown=false; starEyes=false; spinT=0;
+    }
+  }
+  else if(phase==='PAUSE'){
+    phaseF++;
+    armRaise=Math.max(0,armRaise-0.04);
+    if(phaseF>60){sentIdx++;colorOff+=3;startSentence();}
+  }
+  else if(phase==='CLEARALL'){
+    phaseF++;
+    // fade out all settled tokens
+    settledToks.forEach(function(t){t.alpha-=0.015;});
+    settledToks=settledToks.filter(function(t){return t.alpha>0;});
+    armRaise=Math.max(0,armRaise-0.04);
+    clawOpen=Math.max(0,clawOpen-0.04);
+    if(settledToks.length===0&&phaseF>40){
+      // restart
+      sentIdx=0; colorOff=0; totalDone=0;
+      startSentence();
+    }
+  }
+
+  // flying token physics
+  flyingToks.forEach(function(t){
+    if(t.settled)return;
+    t.vx*=0.97;
+    t.vy+=0.1;
+    t.x+=t.vx; t.y+=t.vy;
+    var floorTop=FLOOR-t.bh;
+    if(t.y>=floorTop){
+      t.y=floorTop;
+      t.vy*=-0.3;
+      t.vx*=0.7;
+      if(Math.abs(t.vy)<0.25){
+        // settle: assign random bounce params
+        t.settled=true;
+        t.vx=0; t.vy=0;
+        t.targetX=t.x; t.targetY=t.y;
+        t.alpha=1;
+        settledToks.push(t);
+      }
+    }
+  });
+  flyingToks=flyingToks.filter(function(t){return !t.settled;});
+
+  // settled tokens: flow left-to-right, wrap to next row when full
+  var GAP=2, START_X=3, ROW_H=P.tokBoxSize+3;
+  var maxRight=GW-3;
+  var cx=START_X, cy=FLOOR-P.tokBoxSize-2;
+  // first pass: assign row starting from bottom, rows stack upward
+  // collect rows
+  var rows=[], row=[];
+  settledToks.forEach(function(t){
+    if(cx+t.bw>maxRight && row.length>0){
+      rows.push(row); row=[]; cx=START_X;
+      cy-=ROW_H;
+    }
+    t.targetX=cx+t.bw/2;
+    t.targetY=cy;
+    cx+=t.bw+GAP;
+    row.push(t);
+  });
+  if(row.length>0) rows.push(row);
+  // smoothly slide
+  settledToks.forEach(function(t){
+    t.x+=(t.targetX-t.x)*0.08;
+    t.y+=(t.targetY-t.y)*0.08;
+  });
+
+  flashPts=flashPts.filter(function(f){return f.life>0;});
+  flashPts.forEach(function(f){f.x+=f.vx;f.y+=f.vy;f.life--;});
+}
+
+function draw(){
+  ctx.fillStyle='#0d0d1a';ctx.fillRect(0,0,GW*S,GH*S);
+
+  // stars
+  stars.forEach(function(s){
+    if(P.star)s.t+=0.022;
+    var b=P.star?(0.3+0.7*Math.abs(Math.sin(s.t))):0.5;
+    ctx.globalAlpha=b;ctx.fillStyle=s.c;
+    ctx.fillRect(s.gx*S,s.gy*S,S,S);ctx.globalAlpha=1;
+  });
+
+  // title
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillStyle=O1;ctx.font='bold '+P.titleSize+'px monospace';
+  ctx.fillText('TOKENIZATION',GW/2*S,10);
+  ctx.fillStyle='rgba(200,150,120,0.65)';ctx.font=P.subtitleSize+'px monospace';
+  ctx.fillText('how language becomes understanding',GW/2*S,26);
+  ctx.textAlign='left';
+
+  var blink=Math.sin(frame*0.018)<0.93;
+  var celebOpts={};
+  if(phase==='CELEBRATE'){
+    celebOpts.noHat=true; // hat is drawn separately flying
+    // spin: squish cycle  sin wave squeeze
+    if(spinT>0){
+      var spinCycle=Math.sin(spinT*Math.PI*4);
+      celebOpts.squishX=1+spinCycle*0.35;
+      celebOpts.squishY=1-spinCycle*0.2;
+    }
+    celebOpts.noClaws=clawsThrown;
+    celebOpts.starEyes=starEyes;
+  }
+  drawChar(blink,armRaise,clawOpen,celebOpts);
+
+  // flying hat
+  if(phase==='CELEBRATE'&&hatVisible&&hatY<GH){
+    // draw hat at hatX,hatY offset
+    ctx.save();
+    ctx.translate(Math.round(hatX-CX)*S, Math.round(hatY-BY)*S);
+    drawHat();
+    ctx.restore();
+  }
+
+  // flying claws
+  if(phase==='CELEBRATE'&&clawsThrown){
+    // left claw block
+    px(Math.round(clawLX),Math.round(clawLY),O1,6,4);
+    px(Math.round(clawLX)-1,Math.round(clawLY),O2,1,4);
+    // right claw block
+    px(Math.round(clawRX),Math.round(clawRY),O1,6,4);
+    px(Math.round(clawRX)+6,Math.round(clawRY),O2,1,4);
+  }
+
+  // snake
+  if(phase==='ENTERING'||phase==='RAISING'||phase==='CUTTING'){
+    ctx.font='bold '+P.txtSize+'px monospace';
+    ctx.textBaseline='middle';ctx.textAlign='center';
+    chars.forEach(function(c,i){
+      // hide chars that are fully cut (cutIdx passed them)
+      if(i<cutIdx||c.t<0)return;
+      var pt=bezPt(Math.min(1,c.t));
+      ctx.globalAlpha=Math.min(1,(c.t+0.1)*5);
+      ctx.fillStyle=P.txtColor;
+      // if this char is being cut, show remaining subtokens as greyed suffix
+      if(i===cutIdx && phase==='CUTTING'){
+        var sent=SENTENCES[sentIdx%SENTENCES.length];
+        var subToks=sent.cut[c.dispIdx];
+        var remaining=subToks.slice(subCutIdx).join('');
+        // draw at claw tip if char has arrived
+        var drawPt=c.t>=1?bezPt(1):pt;
+        ctx.fillStyle=P.txtColor;
+        ctx.fillText(remaining,Math.round(drawPt.x)*S,Math.round(drawPt.y)*S);
+      } else {
+        ctx.fillStyle=P.txtColor;
+        ctx.fillText(c.txt,Math.round(pt.x)*S,Math.round(pt.y)*S);
+      }
+    });
+    ctx.globalAlpha=1;ctx.textAlign='left';ctx.textBaseline='top';
+  }
+
+  // flying tokens
+  flyingToks.forEach(function(t){
+    pxBox(t.x-t.bw/2,t.y,t.bw,t.bh,t.col);
+    ctx.fillStyle='#fff';
+    ctx.font='bold '+P.tokFontSize+'px monospace';
+    ctx.textBaseline='middle';ctx.textAlign='center';
+    ctx.fillText(t.txt,Math.round(t.x)*S,Math.round(t.y+t.bh/2)*S);
+    ctx.textAlign='left';ctx.textBaseline='top';
+  });
+
+  // settled bouncing tokens
+  settledToks.forEach(function(t){
+    ctx.globalAlpha=t.alpha!==undefined?t.alpha:1;
+    pxBox(t.x-t.bw/2,t.y,t.bw,t.bh,t.col);
+    ctx.fillStyle='#fff';
+    ctx.font='bold '+P.tokFontSize+'px monospace';
+    ctx.textBaseline='middle';ctx.textAlign='center';
+    ctx.fillText(t.txt,Math.round(t.x)*S,Math.round(t.y+t.bh/2)*S);
+    ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.globalAlpha=1;
+  });
+
+  // sparks
+  flashPts.forEach(function(f){
+    ctx.globalAlpha=f.life/16;ctx.fillStyle=f.col;
+    ctx.fillRect(Math.round(f.x)*S,Math.round(f.y)*S,S,S);
+    ctx.globalAlpha=1;
+  });
+}
+
+function loop(){update();draw();requestAnimationFrame(loop);}
+startSentence();loop();
+</script>
+</body>
+</html>
