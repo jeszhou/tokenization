@@ -23,7 +23,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;}
   font-size:14px;padding:8px 28px;border-radius:6px;cursor:pointer;z-index:99;
   letter-spacing:2px;transition:all 0.2s;}
 #resetBtn:hover{background:#DA7756;color:#0d0d1a;}
-#inputWrap{position:absolute;top:0;left:0;width:600px;display:flex;align-items:center;gap:6px;padding:36px 40px 0 40px;z-index:50;pointer-events:none;}
+#inputWrap{position:absolute;top:0;left:0;width:600px;display:flex;align-items:center;gap:6px;padding:99px 40px 0 40px;z-index:50;pointer-events:none;}
 #inputWrap.active{pointer-events:auto;}
 #userInput{flex:1;background:transparent;border:1px solid rgba(218,119,86,0.4);border-radius:4px;
   color:#f0e8d8;font-family:monospace;font-size:12px;padding:5px 10px;outline:none;
@@ -44,7 +44,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;}
 </div>
 </div>
 <button id="resetBtn">RESET</button>
-<div id="panel">
+<div id="panel" class="hidden">
   <h3>CONTROLS <span id="toggleBtn">H</span></h3>
   <div class="pbody">
     <div class="row"><label>文字速度</label><input type="range" id="sl_txtSpeed" min="0.2" max="4" step="0.05" value="0.8"><span class="val" id="vl_txtSpeed">0.8</span></div>
@@ -52,27 +52,33 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;}
     <div class="row"><label>文字颜色</label><input type="color" id="sl_txtColor" value="#f0e8d8"><span class="val" id="vl_txtColor" style="font-size:9px">#f0e8d8</span></div>
     <div class="row"><label>字符间距</label><input type="range" id="sl_charGap" min="0.02" max="0.12" step="0.005" value="0.055"><span class="val" id="vl_charGap">0.055</span></div>
     <div class="row"><label>钳子咬速</label><input type="range" id="sl_clawSpeed" min="0.03" max="0.3" step="0.01" value="0.10"><span class="val" id="vl_clawSpeed">0.10</span></div>
-    <div class="row"><label>Token飞速X</label><input type="range" id="sl_tokVx" min="0.3" max="5" step="0.1" value="1.8"><span class="val" id="vl_tokVx">1.8</span></div>
-    <div class="row"><label>Token飞速Y</label><input type="range" id="sl_tokVy" min="0.3" max="4" step="0.1" value="1.5"><span class="val" id="vl_tokVy">1.5</span></div>
-    <div class="row"><label>举臂触发距</label><input type="range" id="sl_raiseDist" min="0.02" max="0.4" step="0.01" value="0.10"><span class="val" id="vl_raiseDist">0.10</span></div>
+    <div class="row"><label>Token飞速X</label><input type="range" id="sl_tokVx" min="0.3" max="5" step="0.1" value="4.3"><span class="val" id="vl_tokVx">4.3</span></div>
+    <div class="row"><label>Token飞速Y</label><input type="range" id="sl_tokVy" min="0.3" max="4" step="0.1" value="3.5"><span class="val" id="vl_tokVy">3.5</span></div>
+    <div class="row"><label>举臂触发距</label><input type="range" id="sl_raiseDist" min="0.02" max="0.4" step="0.01" value="0.05"><span class="val" id="vl_raiseDist">0.05</span></div>
     <div class="sep"></div>
-    <div class="row"><label>方块跳动幅度</label><input type="range" id="sl_bounce" min="0.1" max="3" step="0.05" value="0.8"><span class="val" id="vl_bounce">0.8</span></div>
+    <div class="row"><label>方块跳动幅度</label><input type="range" id="sl_bounce" min="0.1" max="3" step="0.05" value="1"><span class="val" id="vl_bounce">1</span></div>
     <div class="row"><label>方块跳动频率</label><input type="range" id="sl_bounceFreq" min="0.01" max="0.15" step="0.005" value="0.04"><span class="val" id="vl_bounceFreq">0.04</span></div>
-    <div class="row"><label>方块字号</label><input type="range" id="sl_tokFontSize" min="4" max="16" step="1" value="16"><span class="val" id="vl_tokFontSize">16</span></div>
-    <div class="row"><label>方块大小</label><input type="range" id="sl_tokBoxSize" min="6" max="30" step="1" value="8"><span class="val" id="vl_tokBoxSize">8</span></div>
-    <div class="row"><label>标题字号</label><input type="range" id="sl_titleSize" min="8" max="22" step="1" value="13"><span class="val" id="vl_titleSize">13</span></div>
-    <div class="row"><label>副标题字号</label><input type="range" id="sl_subtitleSize" min="5" max="14" step="1" value="7"><span class="val" id="vl_subtitleSize">7</span></div>
+    <div class="row"><label>方块字号</label><input type="range" id="sl_tokFontSize" min="4" max="16" step="1" value="13"><span class="val" id="vl_tokFontSize">13</span></div>
+    <div class="row"><label>方块大小</label><input type="range" id="sl_tokBoxSize" min="6" max="30" step="1" value="13"><span class="val" id="vl_tokBoxSize">13</span></div>
+    <div class="row"><label>标题字号</label><input type="range" id="sl_titleSize" min="8" max="22" step="1" value="22"><span class="val" id="vl_titleSize">22</span></div>
+    <div class="row"><label>副标题字号</label><input type="range" id="sl_subtitleSize" min="5" max="14" step="1" value="14"><span class="val" id="vl_subtitleSize">14</span></div>
     <div class="sep"></div>
     <div class="row"><label>星星闪烁</label><input type="checkbox" id="chk_star" checked></div>
     <div class="row"><label>切割火花</label><input type="checkbox" id="chk_spark" checked></div>
     <div class="sep"></div>
-    <div class="row"><label>蹦跳速度</label><input type="range" id="sl_bounceSpeed" min="0.3" max="2.0" step="0.05" value="1.0"><span class="val" id="vl_bounceSpeed">1.0</span></div>
+    <div class="row"><label>蹦跳速度</label><input type="range" id="sl_bounceSpeed" min="0.3" max="2.0" step="0.05" value="0.45"><span class="val" id="vl_bounceSpeed">0.45</span></div>
     <div class="sep"></div>
     <div class="row"><label>对话框描边</label><input type="color" id="sl_bubbleBorder" value="#DA7756"><span class="val" id="vl_bubbleBorder" style="font-size:9px">#DA7756</span></div>
     <div class="row"><label>对话框背景</label><input type="color" id="sl_bubbleBg" value="#1a1a2e"><span class="val" id="vl_bubbleBg" style="font-size:9px">#1a1a2e</span></div>
     <div class="row"><label>对话框文字色</label><input type="color" id="sl_bubbleColor" value="#f0e8d8"><span class="val" id="vl_bubbleColor" style="font-size:9px">#f0e8d8</span></div>
-    <div class="row"><label>对话框字号</label><input type="range" id="sl_bubbleFontSize" min="6" max="14" step="1" value="9"><span class="val" id="vl_bubbleFontSize">9</span></div>
-    <div class="row"><label>对话框大小</label><input type="range" id="sl_bubbleSize" min="0.5" max="2.0" step="0.1" value="1.0"><span class="val" id="vl_bubbleSize">1.0</span></div>
+    <div class="row"><label>对话框字号</label><input type="range" id="sl_bubbleFontSize" min="6" max="14" step="1" value="14"><span class="val" id="vl_bubbleFontSize">14</span></div>
+    <div class="row"><label>对话框大小</label><input type="range" id="sl_bubbleSize" min="0.5" max="2.0" step="0.1" value="2.0"><span class="val" id="vl_bubbleSize">2.0</span></div>
+    <div class="sep"></div>
+    <div class="row"><label>标题Y位置</label><input type="range" id="sl_titleY" min="0" max="60" step="1" value="20"><span class="val" id="vl_titleY">20</span></div>
+    <div class="row"><label>副标题Y位置</label><input type="range" id="sl_subtitleY" min="10" max="80" step="1" value="80"><span class="val" id="vl_subtitleY">80</span></div>
+    <div class="row"><label>打字框Y位置</label><input type="range" id="sl_inputY" min="0" max="120" step="1" value="99"><span class="val" id="vl_inputY">99</span></div>
+    <div class="row"><label>对话框偏移X</label><input type="range" id="sl_bubbleOffX" min="-100" max="100" step="2" value="66"><span class="val" id="vl_bubbleOffX">66</span></div>
+    <div class="row"><label>对话框偏移Y</label><input type="range" id="sl_bubbleOffY" min="-100" max="100" step="2" value="22"><span class="val" id="vl_bubbleOffY">22</span></div>
   </div>
 </div>
 <script>
@@ -84,13 +90,15 @@ const ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 
 const P={
-  txtSpeed:0.8, txtSize:10, txtColor:'#f0e8d8', charGap:0.055,
-  clawSpeed:0.10, tokVx:1.8, tokVy:1.5, raiseDist:0.18,
-  bounce:0.8, bounceFreq:0.04, tokFontSize:8, tokBoxSize:10, titleSize:13, subtitleSize:7,
+  txtSpeed:0.8, txtSize:20, txtColor:'#f0e8d8', charGap:0.055,
+  clawSpeed:0.10, tokVx:4.3, tokVy:3.5, raiseDist:0.05,
+  bounce:1, bounceFreq:0.04, tokFontSize:13, tokBoxSize:13, titleSize:22, subtitleSize:14,
   star:true, spark:true,
-  bounceSpeed:1.0,
+  bounceSpeed:0.45,
   bubbleBorder:'#DA7756', bubbleBg:'#1a1a2e', bubbleColor:'#f0e8d8',
-  bubbleFontSize:9, bubbleSize:1.0
+  bubbleFontSize:14, bubbleSize:2.0,
+  titleY:20, subtitleY:80, bubbleOffX:66, bubbleOffY:22,
+  inputY:99
 };
 
 function bR(sid,vid,key,isFloat){
@@ -123,6 +131,19 @@ document.getElementById('chk_spark').addEventListener('change',function(e){P.spa
 bR('sl_bounceSpeed','vl_bounceSpeed','bounceSpeed',true);
 bR('sl_bubbleFontSize','vl_bubbleFontSize','bubbleFontSize',false);
 bR('sl_bubbleSize','vl_bubbleSize','bubbleSize',true);
+bR('sl_titleY','vl_titleY','titleY',false);
+bR('sl_subtitleY','vl_subtitleY','subtitleY',false);
+(function(){
+  var sl=document.getElementById('sl_inputY'), vl=document.getElementById('vl_inputY');
+  var wrap=document.getElementById('inputWrap');
+  sl.addEventListener('input',function(){
+    P.inputY=parseInt(sl.value);
+    vl.textContent=sl.value;
+    wrap.style.paddingTop=P.inputY+'px';
+  });
+})();
+bR('sl_bubbleOffX','vl_bubbleOffX','bubbleOffX',false);
+bR('sl_bubbleOffY','vl_bubbleOffY','bubbleOffY',false);
 document.getElementById('sl_bubbleBorder').addEventListener('input',function(e){
   P.bubbleBorder=e.target.value; document.getElementById('vl_bubbleBorder').textContent=e.target.value;
 });
@@ -223,6 +244,7 @@ function submitUserInput(){
   bounceY=0; spinAngle=0; celebSquishX=1; celebSquishY=1;
   cuteAction='jumpspin'; cuteTimer=0; celebSeqIdx=0;
   bubble.life=0; bubbleCooldown=0;
+  flipIdx=-1; flipTimer=0; flipDone=false; flipAllDoneFrame=0;
   document.getElementById('resetBtn').style.display='none';
   startSentence();
   input.blur();
@@ -238,6 +260,31 @@ const O1='#DA7756',O2='#b85a38',O3='#e89a70',BK='#0a0806',WH='#f0e8d8';
 const H1='#e8b84b',H2='#c99030',H3='#f5d070';
 const TOKC=['#DA7756','#5BC4BF','#F4A7B9','#F5C842','#7BC67E','#A78BFA','#60a5fa'];
 
+// --- Token ID mapping (realistic ranges based on common tokenizers) ---
+var TOKEN_IDS={
+  '语':101234,'言':101339,'是':99934,'人':99804,'类':102156,
+  '智':103567,'能':100890,'沉':104512,'淀':106234,'下':99678,
+  '来':99723,'的':99432,'化':101890,'石':102345,
+  'tok':83,'en':268,'iz':528,'ation':859,
+  'is':318,'where':2940,'mean':11948,'ing':287,
+  'be':1395,'gins':7067
+};
+// fallback: generate a stable pseudo-random ID for unknown tokens
+function getTokenId(txt){
+  if(TOKEN_IDS[txt]!==undefined) return TOKEN_IDS[txt];
+  // hash the text to a stable number
+  var h=0;
+  for(var i=0;i<txt.length;i++) h=((h<<5)-h+txt.charCodeAt(i))|0;
+  return Math.abs(h%150000)+500;
+}
+
+// flip state
+var flipIdx=-1;        // which token is currently flipping (-1=not started)
+var flipTimer=0;       // frames within current flip
+var flipDelay=12;      // frames between each token flip
+var flipDone=false;    // all tokens have flipped
+var flipAllDoneFrame=0; // frame when all flips completed
+
 function px(x,y,c,w,h){
   w=w||1;h=h||1;
   ctx.fillStyle=c;
@@ -252,7 +299,7 @@ var TOTAL_SENTS=2;
 
 // bezier — endpoint = raised left claw mouth
 const CLAW_TIP_X=BX+3, CLAW_TIP_Y=BY-22;
-const BP={p0:{x:-8,y:5},p1:{x:10,y:5},p2:{x:35,y:CLAW_TIP_Y-10},p3:{x:CLAW_TIP_X,y:CLAW_TIP_Y}};
+const BP={p0:{x:-8,y:40},p1:{x:10,y:35},p2:{x:35,y:CLAW_TIP_Y-10},p3:{x:CLAW_TIP_X,y:CLAW_TIP_Y}};
 function bezPt(t){
   t=Math.max(0,Math.min(1,t));
   var m=1-t,p=BP;
@@ -463,6 +510,7 @@ var SENTENCES=[
     cut:    [['tok','en','iz','ation'],['is'],['where'],['mean','ing'],['be','gins']]
   },
 ];
+var DEFAULT_SENTENCES=SENTENCES.slice();
 var colorOff=0;
 function tokCol(i){return TOKC[(colorOff+i)%TOKC.length];}
 function rnd(a,b){return Math.random()*(b-a)+a;}
@@ -592,16 +640,14 @@ function drawBubble(){
 
   var bx, by, tailX, tailDir;
   if(phase==='CELEBRATE'){
-    // celebrate: centered above head
-    bx=CX*S-pw/2;
-    by=(BY-22)*S-ph;
+    bx=CX*S-pw/2+P.bubbleOffX;
+    by=(BY-22)*S-ph+P.bubbleOffY;
     if(bounceY!==0) by+=Math.round(bounceY)*S;
-    tailX=CX*S;
+    tailX=CX*S+P.bubbleOffX;
     tailDir='down';
   } else {
-    // work: top-right of character, avoid claws on left
-    bx=(BX+BW+6)*S;
-    by=(BY-16)*S;
+    bx=(BX+BW+6)*S+P.bubbleOffX;
+    by=(BY-16)*S+P.bubbleOffY;
     tailX=bx;
     tailDir='left';
   }
@@ -771,13 +817,57 @@ function update(){
     if(flyingToks.length===0&&phaseF>30){
       totalDone++;
       if(totalDone>=TOTAL_SENTS){
-        phase='CELEBRATE'; phaseF=0; celebT=0;
-        // init hat projectile
-        hatX=CX; hatY=BY; hatVx=rnd(-1.5,1.5); hatVy=-3.5;
-        hatVisible=true; clawsThrown=false; spinT=0; starEyes=false;
+        // go to flip show before celebrating
+        phase='FLIPSHOW'; phaseF=0;
+        flipIdx=-1; flipTimer=0; flipDone=false; flipAllDoneFrame=0;
+        // assign token IDs to all settled tokens
+        settledToks.forEach(function(t){
+          t.tokenId=getTokenId(t.txt);
+          t.flipped=false;
+          t.flipProgress=0; // 0→1 animation
+        });
       } else {
         phase='PAUSE'; phaseF=0;
       }
+    }
+  }
+  else if(phase==='FLIPSHOW'){
+    phaseF++;
+    armRaise=Math.max(0,armRaise-0.04);
+    clawOpen=Math.max(0,clawOpen-0.04);
+
+    // wait a beat before starting flips
+    if(phaseF>30){
+      flipTimer++;
+      if(flipTimer>=flipDelay){
+        flipTimer=0;
+        flipIdx++;
+        if(flipIdx<settledToks.length){
+          settledToks[flipIdx].flipStart=phaseF;
+        }
+      }
+    }
+
+    // animate each token's flip
+    settledToks.forEach(function(t){
+      if(t.flipStart && phaseF>=t.flipStart){
+        var ft=(phaseF-t.flipStart)/20;
+        t.flipProgress=Math.min(1,ft);
+        if(ft>=0.5) t.flipped=true;
+      }
+    });
+
+    // all done flipping? show captions, then celebrate
+    var allFlipped=settledToks.length>0 && settledToks.every(function(t){return t.flipProgress>=1;});
+    if(allFlipped && !flipDone){
+      flipDone=true;
+      flipAllDoneFrame=phaseF;
+    }
+    // wait 180 frames after all flipped (3 seconds for captions) then celebrate
+    if(flipDone && phaseF>flipAllDoneFrame+180){
+      phase='CELEBRATE'; phaseF=0; celebT=0;
+      hatX=CX; hatY=BY; hatVx=rnd(-1.5,1.5); hatVy=-3.5;
+      hatVisible=true; clawsThrown=false; spinT=0; starEyes=false;
     }
   }
   else if(phase==='CELEBRATE'){
@@ -989,9 +1079,9 @@ function draw(){
   // title
   ctx.textAlign='center';ctx.textBaseline='top';
   ctx.fillStyle=O1;ctx.font='bold '+P.titleSize+'px monospace';
-  ctx.fillText('TOKENIZATION',GW/2*S,10);
+  ctx.fillText('TOKENIZATION',GW/2*S,P.titleY);
   ctx.fillStyle='rgba(200,150,120,0.65)';ctx.font=P.subtitleSize+'px monospace';
-  ctx.fillText('how language becomes understanding',GW/2*S,26);
+  ctx.fillText('how language becomes understanding',GW/2*S,P.subtitleY);
   ctx.textAlign='left';
 
   var blink=Math.sin(frame*0.018)>0.97;
@@ -1102,15 +1192,51 @@ function draw(){
     ctx.textAlign='left';ctx.textBaseline='top';
   });
 
-  // settled bouncing tokens
+  // settled bouncing tokens (with flip animation)
   settledToks.forEach(function(t){
     ctx.globalAlpha=t.alpha!==undefined?t.alpha:1;
-    pxBox(t.x-t.bw/2,t.y,t.bw,t.bh,t.col);
-    ctx.fillStyle='#fff';
-    ctx.font='bold '+P.tokFontSize+'px monospace';
-    ctx.textBaseline='middle';ctx.textAlign='center';
-    ctx.fillText(t.txt,Math.round(t.x)*S,Math.round(t.y+t.bh/2)*S);
-    ctx.textAlign='left';ctx.textBaseline='top';
+    var cx=Math.round(t.x)*S, cy=Math.round(t.y+t.bh/2)*S;
+    var bx=t.x-t.bw/2, by=t.y;
+
+    if(t.flipProgress>0 && t.flipProgress<1){
+      // flip animation: scale X using cos curve (1→0→1)
+      var scaleX=Math.abs(Math.cos(t.flipProgress*Math.PI));
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(scaleX, 1);
+      ctx.translate(-cx, -cy);
+      // draw box
+      var drawW=t.bw, drawH=t.bh;
+      ctx.fillStyle='#0a0806';
+      ctx.fillRect(Math.round(bx)*S, Math.round(by)*S, drawW*S, drawH*S);
+      var innerCol=t.flipped?'rgba(218,119,86,0.33)':t.col;
+      ctx.fillStyle=innerCol;
+      ctx.fillRect((Math.round(bx)+1)*S,(Math.round(by)+1)*S,(drawW-2)*S,(drawH-2)*S);
+      ctx.fillStyle='rgba(255,255,255,0.22)';
+      ctx.fillRect((Math.round(bx)+1)*S,Math.round(by)*S,(drawW-2)*S,S);
+      // text
+      var displayTxt=t.flipped?(''+t.tokenId):t.txt;
+      var displayCol=t.flipped?'#d0d0d0':'#fff';
+      var fs=t.flipped?Math.max(6,P.tokFontSize-2):P.tokFontSize;
+      ctx.fillStyle=displayCol;
+      ctx.font='bold '+fs+'px monospace';
+      ctx.textBaseline='middle';ctx.textAlign='center';
+      ctx.fillText(displayTxt, cx, cy);
+      ctx.textAlign='left';ctx.textBaseline='top';
+      ctx.restore();
+    } else {
+      // normal or fully flipped
+      var displayTxt=(t.flipped)?(''+t.tokenId):t.txt;
+      var boxCol=t.flipped?'rgba(218,119,86,0.33)':t.col;
+      pxBox(bx,by,t.bw,t.bh,boxCol);
+      var displayCol=t.flipped?'#d0d0d0':'#fff';
+      var fs=t.flipped?Math.max(6,P.tokFontSize-2):P.tokFontSize;
+      ctx.fillStyle=displayCol;
+      ctx.font='bold '+fs+'px monospace';
+      ctx.textBaseline='middle';ctx.textAlign='center';
+      ctx.fillText(displayTxt, cx, cy);
+      ctx.textAlign='left';ctx.textBaseline='top';
+    }
     ctx.globalAlpha=1;
   });
 
@@ -1120,6 +1246,40 @@ function draw(){
     ctx.fillRect(Math.round(f.x)*S,Math.round(f.y)*S,S,S);
     ctx.globalAlpha=1;
   });
+
+  // --- FLIPSHOW captions (persist into CELEBRATE too) ---
+  // annotation: between token blocks and reset button area, near the blocks
+  if((phase==='FLIPSHOW'&&flipIdx>=0)||phase==='CELEBRATE'||phase==='CLEARALL'){
+    var noteAlpha=1;
+    if(phase==='FLIPSHOW') noteAlpha=Math.min(1,(phaseF-30)/30);
+    if(phase==='CLEARALL') noteAlpha=Math.max(0,1-phaseF/40);
+    if(noteAlpha>0){
+      ctx.save();
+      ctx.globalAlpha=noteAlpha;
+      ctx.fillStyle='rgba(200,170,140,0.6)';
+      ctx.font='9px monospace';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText('每个碎片对应一个编号 — 这就是大模型的「词典」',GW/2*S,(FLOOR+4)*S);
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.restore();
+    }
+  }
+  // closing tagline: between input box (grid~25) and character (BY=108), centered at grid~66
+  if((phase==='FLIPSHOW'&&flipDone)||phase==='CELEBRATE'){
+    var tagAlpha=1;
+    if(phase==='FLIPSHOW') tagAlpha=Math.min(1,(phaseF-flipAllDoneFrame)/40);
+    ctx.save();
+    ctx.globalAlpha=tagAlpha;
+    ctx.fillStyle=O1;
+    ctx.font='bold 14px monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('机器不认字，只认数字。',GW/2*S, 40*S);
+    ctx.fillStyle='rgba(200,170,140,0.7)';
+    ctx.font='11px monospace';
+    ctx.fillText('这，就是 Token。',GW/2*S, 47*S);
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.restore();
+  }
 
   // confetti particles
   confetti.forEach(function(c){
@@ -1143,12 +1303,17 @@ function loop(){update();draw();requestAnimationFrame(loop);}
 
 document.getElementById('resetBtn').addEventListener('click',function(){
   document.getElementById('resetBtn').style.display='none';
+  // restore default sentences
+  SENTENCES=DEFAULT_SENTENCES.slice();
+  TOTAL_SENTS=2;
+  userInputText='';
   phase='CLEARALL'; phaseF=0;
   hatVisible=false; clawsThrown=false; starEyes=false; spinT=0;
   confetti=[]; celebHearts=[];
   bounceY=0; spinAngle=0; celebSquishX=1; celebSquishY=1;
   cuteAction='jumpspin'; cuteTimer=0; celebSeqIdx=0;
   bubble.life=0; bubbleCooldown=0;
+  flipIdx=-1; flipTimer=0; flipDone=false; flipAllDoneFrame=0;
 });
 
 startSentence();loop();
